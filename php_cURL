@@ -1,0 +1,65 @@
+
+
+<?php
+$today ='2015%2F03%2F16';
+$URL = 'http://www.twse.com.tw/en/trading/fund/TWT44U/TWT44U.php';
+$body ='download=csv&qdate='.$today.'&sorting=by_issue';
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL,$URL );
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+curl_setopt($ch, CURLOPT_HEADER, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS,$body);
+curl_setopt($ch, CURLOPT_POST,1);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+'Host: www.twse.com.tw',
+'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:36.0) Gecko/20100101 Firefox/36.0',
+'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+'Accept-Language: en-US,en;q=0.5',
+'Accept-Encoding: gzip, deflate',
+'Referer: '.$URL.'',
+'Connection: keep-alive',
+'Content-Type: application/x-www-form-urlencoded',
+'Content-Length: 50'
+        ));
+$response = curl_exec($ch);
+curl_close($ch);
+$parsed = (explode(PHP_EOL, $response	 ));
+$trimmed_array=array_map('trim',$parsed);
+$a = 0;
+foreach ($trimmed_array as $commas)
+{
+$a++;
+$parsed = array();
+$parsed = (explode(',', $commas	 ));
+foreach($parsed as $value){
+   $newarray[$a][]=str_replace('"','',$value);
+}
+}
+//print_r($newarray);
+
+///WHERE TO START IN csv FILE?
+if(trim($newarray[12][1]) == "Security Code") 
+{$starter = 13; $placer = 1;}
+else 
+{$starter = 14; $placer = 0;}
+$count = count($newarray);
+
+///Create List
+for($a = $starter; $a<$count; $a++) 
+{
+
+//exclude warrants, ETFs and CBs
+if(strlen(trim($newarray[$a][$placer]))==4)
+{
+
+$key = trim($newarray[$a][$placer]);
+$finalarray[$key]['Ticker'] = trim($newarray[$a][$placer]);
+$finalarray[$key]['Buy'] = trim($newarray[$a][$placer+1]);
+$finalarray[$key]['Sell']=trim($newarray[$a][$placer+2]);
+$finalarray[$key]['Net']=trim($newarray[$a][$placer+1])-trim($newarray[$a][$placer+2]);
+}
+}
+//print_r($finalarray);
+
+?>
